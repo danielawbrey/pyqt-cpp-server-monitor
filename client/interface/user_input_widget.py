@@ -46,7 +46,7 @@ class User_Input_Widget(QWidget):
         self.layout.addWidget(self.start_test_button,3,0)
 
         self.stop_test_button = QPushButton("End Test")
-        self.stop_test_button.setEnabled(False) # Display button but don't enable until test has 
+        self.stop_test_button.setEnabled(False) 
         self.stop_test_button.clicked.connect(self.stop_test_manager)
         self.layout.addWidget(self.stop_test_button,3,1)
         
@@ -60,22 +60,21 @@ class User_Input_Widget(QWidget):
         if(self.verify_user_input(user_input)):
             self.start_time = datetime.datetime.now()
 
-            self.timer.start(int(self.test_duration_input.text())*1000) # Convert to seconds per requirements
+            self.timer.start(int(self.test_duration_input.text())*1000)
 
             self.thread_data = Worker(UDP_Client(user_input[0].text(), user_input[1].text(), user_input[2].text(), user_input[3].text()), parent=self)
             self.thread_data.server_data.connect(self.plot_data)
             self.thread_data.start()
 
-            self.plot.clear_data()
             self.plot.plot_timer.start(10)
 
     def plot_data(self,x,y):
         self.plot.update_data(x,y)
 
     def stop_test_manager(self):
-        self.stop_time = datetime.datetime.now()
-        self.button_manager('stop')
         self.thread_data.exit_session()
+        self.button_manager('stop')
+        self.stop_time = datetime.datetime.now()
         self.timer.stop()
         self.plot.plot_timer.stop()
         self.log_test_data()

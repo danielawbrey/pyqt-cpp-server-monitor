@@ -13,5 +13,5 @@ class UDP_Client:
 
     def get_message_response(self):
         msgFromServer = self.client_socket.recvfrom(1024)
-        print(("Message received {}").format(msgFromServer[0].decode('utf-8')))
+        print(("Message received: {}").format(msgFromServer[0].decode('utf-8')))
         return msgFromServer

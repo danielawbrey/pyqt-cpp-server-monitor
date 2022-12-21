@@ -28,7 +28,36 @@ char* getMessageRespose(int serverSocket, char* buffer, struct sockaddr_in clien
     return buffer;
 }
 
-void initializeSocket(struct sockaddr_in server, const char* ipAddress, int port) {
+void transferData(int serverSocket, struct sockaddr_in client, socklen_t length, vector<string> testDescriptionParts) {
+    int receivedMessage = 0;
+    string dataString = "";
+    const char* replyMessage = "";
+    const int bufferSize = 64;
+    char buffer[bufferSize];
+    while(true) {
+        dataString = to_string(rand() % 10) + ";" + to_string(rand() % 10);
+        replyMessage = dataString.c_str();
+        sendMessage(serverSocket, replyMessage, client, length);
+        
+        // Listen for stop message from client
+        receivedMessage = recvfrom(serverSocket, buffer, sizeof(buffer), 0, (struct sockaddr*) &client, &length);
+        if(receivedMessage < 0)
+            cout << "Reply error" << endl;
+        
+        if(strcmp(buffer, "TEST;CMD=STOP;") == 0) {
+            cout << "Stopping server test...\n" << endl;
+            sendMessage(serverSocket, "TEST;RESULT=STOPPED;", client, length);
+            bzero(buffer, sizeof(buffer));
+            break;
+        }
+
+        bzero(buffer, sizeof(buffer));
+
+        usleep(stoi(testDescriptionParts[1]));
+    }
+}
+
+void initializeSocket(struct sockaddr_in server, int serverSocket, const char* ipAddress, int port) {
     memset(&server, '\0', sizeof(server));
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
@@ -39,7 +68,6 @@ void initializeSocket(struct sockaddr_in server, const char* ipAddress, int port
 }
 
 int main(int argc, char *argv[]) {
-    const char* replyMessage = "123;MODEL=3454;SERIAL=25356;";
     const int bufferSize = 64;
     char buffer[bufferSize];
     int receivedMessage = 0, serverSocket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -47,7 +75,7 @@ int main(int argc, char *argv[]) {
     socklen_t addressSize = sizeof(client), length = sizeof(server);  
     vector<string> testDescriptionParts;
     
-    initializeSocket(server, "127.0.0.1", atoi(argv[1]));
+    initializeSocket(server, serverSocket, "127.0.0.1", atoi(argv[1]));
 
     while(true) {
         cout << "Waiting for discovery message..." << endl;
@@ -56,8 +84,8 @@ int main(int argc, char *argv[]) {
         if(receivedMessage < 0)
             cout << "Reply error" << endl;
 
-        if(regex_match(buffer, regex("[0-9]+;"))) { // Match discovery message pattern
-            cout << "Dicovery message received from device: " << buffer << endl;
+        if(regex_match(buffer, regex("[0-9]+;"))) {
+            cout << "Discovery message received from device: " << buffer << endl;
 
             bzero(buffer, sizeof(buffer));
 
@@ -65,19 +93,21 @@ int main(int argc, char *argv[]) {
 
             sendMessage(serverSocket, "TEST;RESULT=STARTED;", client, length);
 
-            receivedMessage = recvfrom(serverSocket, buffer, sizeof(buffer), 0, (struct sockaddr*) &client, &length); // Receive test description message
+            // Receive test description message
+            receivedMessage = recvfrom(serverSocket, buffer, sizeof(buffer), 0, (struct sockaddr*) &client, &length);
             if(receivedMessage < 0)
                 cout << "Reply error" << endl;
 
             cout << "Test description " << buffer << endl;
 
-            testDescriptionParts = getDescriptionParts(splitString(convertArrayToString(buffer, bufferSize)));
+            testDescriptionParts = getDescriptionParts(splitString(convertArrayToString(buffer, sizeof(buffer))));
 
             bzero(buffer, sizeof(buffer));
+
+            transferData(serverSocket, client, length, testDescriptionParts);
         }
 
         bzero(buffer, sizeof(buffer));
-
     }
 
     return 0;
