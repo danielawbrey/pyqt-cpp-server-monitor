@@ -1,13 +1,13 @@
-Building server output file:
-    1) make compile
-    2) make run PORT=[Port Number]
-        - e.g make run PORT=65432
+##Building server output file:
+    1. cd server
+    2. make compile
+    3. make run PORT=[Port Number]
+        1. *e.g make run PORT=1234*
 
-Starting GUI
-    1) python3 main.py
-        - Note: GUI inputs validate against expected value types
+##Starting GUI
+    1. cd client
+    2. python3 main.py
 
-Justifications:
-    1) I chose to use matplotlib instead of pyqtgraph because it has more robust features and graph exporting is higher quality
-    
-    2) I chose fpdf instead of PyPDF2 because formatting was better and didn't require me to concatenate multiple pdf's. I could just place to png to the pdf.
+##Justifications:
+    1. I chose to use matplotlib instead of pyqtgraph because it has more robust features and graph exporting is higher quality
+    2. I chose fpdf instead of PyPDF2 because formatting was better. Additionally, fpdf didn't require me to concatenate multiple pdf's.
