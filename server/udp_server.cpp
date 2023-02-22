@@ -10,7 +10,6 @@
 #include <sstream>
 #include <vector>
 #include <unistd.h>
-#include "helper.h"
 
 using namespace std;
 
@@ -20,40 +19,41 @@ void sendMessage(int serverSocket, const char* replyMessage, struct sockaddr_in 
         cout << "Sending error" << endl;
 }
 
-char* getMessageRespose(int serverSocket, char* buffer, struct sockaddr_in client, socklen_t length) {
+string getMessageResponse(int serverSocket, struct sockaddr_in client, socklen_t length) {
+    const int bufferSize = 4;
+    char buffer[bufferSize];
     int receivedMessage = recvfrom(serverSocket, buffer, sizeof(buffer), 0, (struct sockaddr*) &client, &length);
     if(receivedMessage < 0)
         cout << "Reply error" << endl;
-    
-    return buffer;
+
+    return string(buffer);
 }
 
-void transferData(int serverSocket, struct sockaddr_in client, socklen_t length, vector<string> testDescriptionParts) {
+void transferData(int serverSocket, struct sockaddr_in client, socklen_t length) {
     int receivedMessage = 0;
     string dataString = "";
     const char* replyMessage = "";
     const int bufferSize = 64;
     char buffer[bufferSize];
+
     while(true) {
         dataString = to_string(rand() % 10) + ";" + to_string(rand() % 10);
         replyMessage = dataString.c_str();
         sendMessage(serverSocket, replyMessage, client, length);
-        
+
         // Listen for stop message from client
         receivedMessage = recvfrom(serverSocket, buffer, sizeof(buffer), 0, (struct sockaddr*) &client, &length);
         if(receivedMessage < 0)
             cout << "Reply error" << endl;
-        
+
         if(strcmp(buffer, "TEST;CMD=STOP;") == 0) {
-            cout << "Stopping server test...\n" << endl;
+            cout << "Stopping server test..." << endl;
             sendMessage(serverSocket, "TEST;RESULT=STOPPED;", client, length);
             bzero(buffer, sizeof(buffer));
             break;
         }
 
         bzero(buffer, sizeof(buffer));
-
-        usleep(stoi(testDescriptionParts[1]));
     }
 }
 
@@ -72,15 +72,18 @@ int main(int argc, char *argv[]) {
     char buffer[bufferSize];
     int receivedMessage = 0, serverSocket = socket(AF_INET, SOCK_DGRAM, 0);
     struct sockaddr_in server, client;
-    socklen_t addressSize = sizeof(client), length = sizeof(server);  
+    socklen_t addressSize = sizeof(client), length = sizeof(server);
     vector<string> testDescriptionParts;
-    
+
     initializeSocket(server, serverSocket, "127.0.0.1", atoi(argv[1]));
+
+    int serverSocket1 = serverSocket;
 
     while(true) {
         cout << "Waiting for discovery message..." << endl;
 
-        receivedMessage = recvfrom(serverSocket, buffer, sizeof(buffer), 0, (struct sockaddr*) &client, &length); // Listen for discovery message
+        // Listen for discovery message
+        receivedMessage = recvfrom(serverSocket, buffer, sizeof(buffer), 0, (struct sockaddr*) &client, &length);
         if(receivedMessage < 0)
             cout << "Reply error" << endl;
 
@@ -100,11 +103,9 @@ int main(int argc, char *argv[]) {
 
             cout << "Test description " << buffer << endl;
 
-            testDescriptionParts = getDescriptionParts(splitString(convertArrayToString(buffer, sizeof(buffer))));
-
             bzero(buffer, sizeof(buffer));
 
-            transferData(serverSocket, client, length, testDescriptionParts);
+            transferData(serverSocket, client, length);
         }
 
         bzero(buffer, sizeof(buffer));

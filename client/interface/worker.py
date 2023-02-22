@@ -26,3 +26,4 @@ class Worker(QThread):
         self.thread_running = False
         self.udp_client.send_message("TEST;CMD=STOP;")
         self.udp_client.get_message_response()
+        # self.udp_client.get_message_response()

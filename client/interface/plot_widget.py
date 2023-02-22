@@ -9,28 +9,23 @@ class Plot_Widget(FigureCanvasQTAgg):
         self.axes = self.fig.add_subplot(111)
         self.axes.set_ylim(ymin=0, ymax=10)
         self.axes.set_ylabel("milliamps")
-
         self.axes.set_xlim(xmin=0, xmax=10)
         self.axes.set_xlabel("millivolts")
 
         self.plot_timer = QTimer()
         self.plot_timer.timeout.connect(self.update_plot)
 
-        self.xdata = []
-        self.ydata = []
+        self.x_data, self.y_data = [], []
 
         super(Plot_Widget, self).__init__(self.fig)
 
     def update_data(self,x,y):
-        self.xdata.append(x)
-        self.ydata.append(y)
+        self.x_data.append(x)
+        self.y_data.append(y)
         
     def update_plot(self):
-        self.axes.cla()
-        self.axes.plot(self.xdata, self.ydata, 'r')
+        self.axes.plot(self.x_data, self.y_data, 'r')
         self.fig.canvas.draw_idle()
-        
+
     def clear_data(self):
-        self.axes.clear()
-        self.xdata = []
-        self.ydata = []
+        self.axes.cla()

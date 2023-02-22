@@ -10,4 +10,4 @@
 
 ##Justifications:
     1. I chose to use matplotlib instead of pyqtgraph because it has more robust features and graph exporting is higher quality
-    2. I chose fpdf instead of PyPDF2 because formatting was better and didn't require me to concatenate multiple pdf's. I could just place to png to the pdf.
+    2. I chose fpdf instead of PyPDF2 because formatting was better. Additionally, fpdf didn't require me to concatenate multiple pdf's.
